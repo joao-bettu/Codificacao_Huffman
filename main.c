@@ -27,6 +27,9 @@ int tem_letra(char c);
 void aumenta_freq(char c);
 void ordena_freq();
 void troca_posi(Codificacao *a, Codificacao *b);
+void monta_arvore();
+void null_folhas(Codificacao *galho);
+void print_vetor();
 
 // Função main:
 int main(){
@@ -35,6 +38,8 @@ int main(){
 
     ordena_freq();
 
+    monta_arvore();
+
     return 0;
 }
 
@@ -42,7 +47,7 @@ int main(){
 void le_palavra(){
     FILE *fp;
 
-    fp = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/Codificacao_Huffman/amostra.txt", "r");
+    fp = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/amostra.txt", "r");
     if(fp==NULL){
         printf("Não foi possível abrir o arquivo!\n");
         exit(1);
@@ -65,11 +70,10 @@ void monta_vetor(FILE *p){
         }else{
             vetor_caracteres[i].caractere = c;
             vetor_caracteres[i].freq = 1;
+            null_folhas(&vetor_caracteres[i]);
         }
     }
-    for(int i = 0; i < total_caracteres; i++){
-        printf("Letra: %c\nFrequência: %d\n", vetor_caracteres[i].caractere, vetor_caracteres[i].freq);
-    }
+    print_vetor();
 }
 int tem_letra(char c){
     for(int i = 0; i < total_caracteres; i++){
@@ -110,13 +114,42 @@ void ordena_freq(){
         }
     }
     printf("\nOrdenado:\n");
-    for(int i = 0; i < total_caracteres; i++){
-        printf("Letra: %c\nFrequência: %d\n", vetor_caracteres[i].caractere, vetor_caracteres[i].freq);
-    }
+    print_vetor();
 }
 void troca_posi(Codificacao *maior, Codificacao *menor){
     Codificacao troca = *maior;
 
     *maior = *menor;
     *menor = troca;
+}
+void monta_arvore(){
+    Codificacao ramo;
+
+    for(int i = 0; i < total_caracteres; i++){
+        if(vetor_caracteres[i].freq == 0){
+            break;
+        }
+        ramo.freq = vetor_caracteres[i].freq + vetor_caracteres[i+1].freq;
+        printf("\nRamo freq: %d\n", ramo.freq);
+        ramo.caractere = ramo.freq;
+        printf("Ramo caracter: %c\n", ramo.caractere);
+        ramo.esquerda = &vetor_caracteres[i];
+        ramo.direita = &vetor_caracteres[i+1];
+        for(int j = 0; j < total_caracteres; j++){
+            if(vetor_caracteres[j].freq == 0){
+                vetor_caracteres[j] = ramo;
+            }
+        }
+    }
+    printf("\nRamos:\n");
+    print_vetor();
+}
+void null_folhas(Codificacao *galho){
+    galho->direita = NULL;
+    galho->esquerda = NULL;
+}
+void print_vetor(){
+    for(int i = 0; i < total_caracteres; i++){
+        printf("Letra: %c\nFrequência: %d\n", vetor_caracteres[i].caractere, vetor_caracteres[i].freq);
+    }
 }
