@@ -17,13 +17,16 @@ typedef struct arvore{
 } Codificacao;
 typedef struct floresta{
     Codificacao node;
-    struct floresta *next;
+    struct floresta *next, *prev;
 } Lista;
+typedef struct mudas{
+    Lista *head, *tail;
+} Sentinela;
 
 // Varáveis globais:
 int total_caracteres;
 Codificacao *vetor_caracteres;
-Lista *FIRST = NULL;
+Sentinela pontas;
 
 // Assinatura das funções:
 void le_palavra();
@@ -31,7 +34,7 @@ void monta_lista(FILE *p);
 int tem_letra(char c);
 void aumenta_freq(char c);
 void ordena_freq();
-void troca_posi(Lista *maior, Lista *menor);
+void troca_posi(Codificacao *maior, Codificacao *menor);
 void monta_arvore();
 void null_folhas(Codificacao *galho);
 void print_lista();
@@ -65,7 +68,10 @@ void le_palavra(){
 }
 void monta_lista(FILE *p){
     char c;
-	Lista *novo_no, *aux;
+	Lista *novo_no;
+
+    pontas.head = NULL;
+    pontas.tail = NULL;
 
     //vetor_caracteres = (Codificacao *)malloc(sizeof(Codificacao) * total_caracteres);
 
@@ -86,12 +92,14 @@ void monta_lista(FILE *p){
 			novo_no->node.freq = 1;
 			null_folhas(&novo_no->node);
 			novo_no->next = NULL;
-			if(FIRST == NULL){
-				FIRST = novo_no;
-				aux = novo_no;
+            novo_no->prev = NULL;
+			if(pontas.head == NULL){
+				pontas.head = novo_no;
+                pontas.tail = novo_no;
 			}else{
-				aux->next = novo_no;
-				aux = novo_no;
+				novo_no->prev = pontas.tail;
+                pontas.tail->next = novo_no;
+                pontas.tail = novo_no;
 			}
         }
     }
@@ -105,7 +113,7 @@ int tem_letra(char c){
     }*/
     Lista *aux;
 
-	for(aux = FIRST; aux!=NULL; aux = aux->next){
+	for(aux = pontas.head; aux!=NULL; aux = aux->next){
 		if(c == aux->node.caractere){
 			return 1;
 		}
@@ -123,12 +131,12 @@ void aumenta_freq(char c){
 
    	Lista *aux;
 
-	if(FIRST==NULL){
+	if(pontas.head==NULL){
 		printf("Lista vazia!\n");
 		exit(1);
 	}
 
-	for(aux = FIRST; aux!=NULL; aux = aux->next){
+	for(aux = pontas.head; aux!=NULL; aux = aux->next){
 		if(aux->node.caractere == c){
 			aux->node.freq++;
 		}
@@ -159,13 +167,13 @@ void ordena_freq(){
 
     Lista *aux, *robin;
 
-	for(aux = FIRST; aux!=NULL; aux = aux->next){
+	for(aux = pontas.tail; aux!=NULL; aux = aux->prev){
 		int houve_troca = 0;
-		for(robin = aux->next; robin!=NULL; robin = robin->next){
-			if(aux->node.freq > robin->node.freq){
-				troca_posi(aux, robin);
-				houve_troca = 1;
-			}
+		for(robin = pontas.head; robin!=aux; robin = robin->next){
+            if(robin->node.freq > robin->next->node.freq){
+                troca_posi(&robin->node, &robin->next->node);
+                houve_troca = 1;
+            }
 		}
 		if(houve_troca == 0){
 			break;
@@ -175,12 +183,11 @@ void ordena_freq(){
     printf("\nOrdenado:\n");
     print_lista();
 }
-void troca_posi(Lista *maior, Lista *menor){
-    Lista troca = *maior;
+void troca_posi(Codificacao *maior, Codificacao *menor){
+    Codificacao troca = *maior;
 
     *maior = *menor;
     *menor = troca;
-	printf("Saiu\n");
 }
 void monta_arvore(){
     Codificacao ramo;
@@ -215,7 +222,7 @@ void print_lista(){
 
     Lista *aux;
 
-	for(aux = FIRST; aux!=NULL; aux = aux->next){
+	for(aux = pontas.head; aux!=NULL; aux = aux->next){
 		printf("Letra: %c\nFrequência: %d\n", aux->node.caractere, aux->node.freq);
 	}
 }
