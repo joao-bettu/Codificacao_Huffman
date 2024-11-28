@@ -15,10 +15,12 @@ typedef struct arvore{
     int freq;
     struct arvore *esquerda, *direita;
 } Codificacao;
+
 typedef struct floresta{
     Codificacao node;
     struct floresta *next, *prev;
 } Lista;
+
 typedef struct mudas{
     Lista *head, *tail;
 } Sentinela;
@@ -36,6 +38,7 @@ void troca_posi(Codificacao *maior, Codificacao *menor);
 void monta_arvore();
 void null_folhas(Codificacao *galho);
 void print_lista();
+Codificacao guilhotina();
 
 // Função main:
 int main(){
@@ -44,7 +47,7 @@ int main(){
 
     ordena_freq();
 
-    //monta_arvore();
+    monta_arvore();
 
     return 0;
 }
@@ -148,7 +151,30 @@ void troca_posi(Codificacao *maior, Codificacao *menor){
     *menor = troca;
 }
 void monta_arvore(){
-    
+    Lista *primeiro, *segundo, *novo;
+
+    while(pontas.head != pontas.tail){
+        primeiro->node = guilhotina();
+        segundo->node = guilhotina();
+
+        novo = (Lista *)malloc(sizeof(Lista));
+
+        novo->node.freq = primeiro->node.freq + segundo->node.freq;
+        novo->node.caractere = novo->node.freq;
+        novo->node.esquerda = &primeiro->node;
+        novo->node.esquerda = &segundo->node;
+        novo->next = NULL;
+        novo->prev = NULL;
+        if(pontas.head == NULL){
+            pontas.head = novo;
+            pontas.tail = novo;
+        }else{
+            pontas.tail->next = novo;
+            novo->prev = pontas.tail;
+            pontas.tail = novo;
+        }
+        ordena_freq();
+    }
 }
 void null_folhas(Codificacao *galho){
     galho->direita = NULL;
@@ -160,4 +186,21 @@ void print_lista(){
 	for(aux = pontas.head; aux!=NULL; aux = aux->next){
 		printf("Letra: %c\nFrequência: %d\n", aux->node.caractere, aux->node.freq);
 	}
+}
+Codificacao guilhotina(){
+    Codificacao aux;
+    Lista *delete;
+
+    if(pontas.head == NULL){
+        exit(1);
+    }
+
+    delete = pontas.head;
+    pontas.head = delete->next;
+    pontas.head->prev = NULL;
+    delete->next = NULL;
+    aux = delete->node;
+    free(delete);
+
+    return aux;
 }
