@@ -33,12 +33,12 @@ void le_palavra();
 void monta_lista(FILE *p, int total_caracteres);
 int tem_letra(char c);
 void aumenta_freq(char c);
+void null_folhas(Codificacao *galho);
+void print_lista();
 void ordena_freq();
 void troca_posi(Codificacao *maior, Codificacao *menor);
 void monta_arvore();
-void null_folhas(Codificacao *galho);
-void print_lista();
-Codificacao guilhotina();
+Lista *guilhotina();
 
 // Função main:
 int main(){
@@ -124,6 +124,17 @@ void aumenta_freq(char c){
 		}
 	}
 }
+void null_folhas(Codificacao *galho){
+    galho->direita = NULL;
+    galho->esquerda = NULL;
+}
+void print_lista(){
+    Lista *aux;
+
+	for(aux = pontas.head; aux!=NULL; aux = aux->next){
+		printf("Letra: %c\nFrequência: %d\n", aux->node.caractere, aux->node.freq);
+	}
+}
 void ordena_freq(){
     // Bubble sort
     Lista *aux, *robin;
@@ -151,16 +162,20 @@ void troca_posi(Codificacao *maior, Codificacao *menor){
     *menor = troca;
 }
 void monta_arvore(){
-    Lista *primeiro, *segundo, *novo;
+    Lista *primeiro = NULL, *segundo = NULL, *novo;
 
     while(pontas.head != pontas.tail){
-        primeiro->node = guilhotina();
-        segundo->node = guilhotina();
+        primeiro = guilhotina();
+        printf("1st %c\n", primeiro->node.caractere);
+        segundo = guilhotina();
+        printf("2nd %c\n", segundo->node.caractere);
 
         novo = (Lista *)malloc(sizeof(Lista));
 
-        novo->node.freq = primeiro->node.freq + segundo->node.freq;
-        novo->node.caractere = novo->node.freq;
+        int frequencia = primeiro->node.freq + segundo->node.freq;
+
+        novo->node.freq = frequencia;
+        novo->node.caractere = '+';
         novo->node.esquerda = &primeiro->node;
         novo->node.esquerda = &segundo->node;
         novo->next = NULL;
@@ -176,31 +191,21 @@ void monta_arvore(){
         ordena_freq();
     }
 }
-void null_folhas(Codificacao *galho){
-    galho->direita = NULL;
-    galho->esquerda = NULL;
-}
-void print_lista(){
+Lista *guilhotina(){
     Lista *aux;
-
-	for(aux = pontas.head; aux!=NULL; aux = aux->next){
-		printf("Letra: %c\nFrequência: %d\n", aux->node.caractere, aux->node.freq);
-	}
-}
-Codificacao guilhotina(){
-    Codificacao aux;
-    Lista *delete;
 
     if(pontas.head == NULL){
         exit(1);
     }
 
-    delete = pontas.head;
-    pontas.head = delete->next;
+    if(pontas.head->next == NULL){
+        aux = pontas.head;
+        pontas.head = NULL;
+        return aux;
+    }
+    aux = pontas.head;
+    pontas.head = pontas.head->next;
     pontas.head->prev = NULL;
-    delete->next = NULL;
-    aux = delete->node;
-    free(delete);
 
     return aux;
 }
