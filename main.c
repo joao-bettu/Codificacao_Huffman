@@ -22,6 +22,7 @@ typedef struct floresta{
 } Lista;
 
 typedef struct mudas{
+    int tamanho;
     Lista *head, *tail;
 } Sentinela;
 
@@ -33,12 +34,12 @@ void le_palavra();
 void monta_lista(FILE *p, int total_caracteres);
 int tem_letra(char c);
 void aumenta_freq(char c);
-void null_folhas(Codificacao *galho);
 void print_lista();
 void ordena_freq();
 void troca_posi(Codificacao *maior, Codificacao *menor);
 void monta_arvore();
-Lista *guilhotina();
+Codificacao *guilhotina();
+void imprime_arvore(Codificacao *no, int altura);
 
 // Função main:
 int main(){
@@ -74,7 +75,7 @@ void monta_lista(FILE *p, int total_caracteres){
 
     pontas.head = NULL;
     pontas.tail = NULL;
-
+    pontas.tamanho = 0;
 
     for(int i = 0; i < total_caracteres; i++){
         c = fgetc(p);
@@ -84,16 +85,19 @@ void monta_lista(FILE *p, int total_caracteres){
 			novo_no = (Lista *)malloc(sizeof(Lista));
 			novo_no->node.caractere = c;
 			novo_no->node.freq = 1;
-			null_folhas(&novo_no->node);
+			novo_no->node.direita = NULL;
+            novo_no->node.esquerda = NULL;
 			novo_no->next = NULL;
             novo_no->prev = NULL;
 			if(pontas.head == NULL){
 				pontas.head = novo_no;
                 pontas.tail = novo_no;
+                pontas.tamanho++;
 			}else{
 				novo_no->prev = pontas.tail;
                 pontas.tail->next = novo_no;
                 pontas.tail = novo_no;
+                pontas.tamanho++;
 			}
         }
     }
@@ -123,10 +127,6 @@ void aumenta_freq(char c){
 			aux->node.freq++;
 		}
 	}
-}
-void null_folhas(Codificacao *galho){
-    galho->direita = NULL;
-    galho->esquerda = NULL;
 }
 void print_lista(){
     Lista *aux;
@@ -162,36 +162,39 @@ void troca_posi(Codificacao *maior, Codificacao *menor){
     *menor = troca;
 }
 void monta_arvore(){
-    Lista *primeiro = NULL, *segundo = NULL, *novo;
+    Codificacao *primeiro = NULL, *segundo = NULL;
+    Lista *novo;
 
-    while(pontas.head != pontas.tail){
+    while(pontas.tamanho > 1){
         primeiro = guilhotina();
-        printf("1st %c\n", primeiro->node.caractere);
         segundo = guilhotina();
-        printf("2nd %c\n", segundo->node.caractere);
 
         novo = (Lista *)malloc(sizeof(Lista));
 
-        int frequencia = primeiro->node.freq + segundo->node.freq;
+        int frequencia = primeiro->freq + segundo->freq;
 
         novo->node.freq = frequencia;
         novo->node.caractere = '+';
-        novo->node.esquerda = &primeiro->node;
-        novo->node.esquerda = &segundo->node;
+        novo->node.esquerda = primeiro;
+        novo->node.direita = segundo;
         novo->next = NULL;
         novo->prev = NULL;
         if(pontas.head == NULL){
             pontas.head = novo;
             pontas.tail = novo;
+            pontas.tamanho++;
         }else{
             pontas.tail->next = novo;
             novo->prev = pontas.tail;
             pontas.tail = novo;
+            pontas.tamanho++;
         }
         ordena_freq();
     }
+
+    imprime_arvore(&pontas.head->node, 0);
 }
-Lista *guilhotina(){
+Codificacao *guilhotina(){
     Lista *aux;
 
     if(pontas.head == NULL){
@@ -201,11 +204,21 @@ Lista *guilhotina(){
     if(pontas.head->next == NULL){
         aux = pontas.head;
         pontas.head = NULL;
-        return aux;
+        pontas.tamanho--;
+        return &aux->node;
     }
     aux = pontas.head;
     pontas.head = pontas.head->next;
     pontas.head->prev = NULL;
+    pontas.tamanho--;
 
-    return aux;
+    return &aux->node;
+}
+void imprime_arvore(Codificacao *raiz, int altura){
+    if(raiz->direita == NULL && raiz->esquerda == NULL){
+        printf("\n\tLetra: %c\n\tFrequencia: %d\n\tTamanho: %d\n", raiz->caractere, raiz->freq, altura);
+    }else{
+        imprime_arvore(raiz->esquerda, altura + 1);
+        imprime_arvore(raiz->direita, altura + 1);
+    }
 }
