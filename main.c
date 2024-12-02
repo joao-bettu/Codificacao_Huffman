@@ -11,6 +11,7 @@
 
 // Structs:
 typedef struct arvore{
+    int id;
     char caractere;
     int freq;
     struct arvore *esquerda, *direita;
@@ -30,7 +31,7 @@ typedef struct mudas{
 Sentinela pontas;
 
 // Assinatura das funções:
-void le_palavra();
+int le_palavra();
 void monta_lista(FILE *p, int total_caracteres);
 int tem_letra(char c);
 void aumenta_freq(char c);
@@ -39,22 +40,57 @@ void ordena_freq();
 void troca_posi(Codificacao *maior, Codificacao *menor);
 void monta_arvore();
 Codificacao *guilhotina();
-void imprime_arvore(Codificacao *no, int altura);
+void imprime_arvore(Codificacao *raiz, int altura);
+int calc_altura(Codificacao *no);
+char** aloca_codigo(int colunas, int tamanho);
+void escreve_codigo(char **codigo, Codificacao *raiz, char *caminho, int colunas);
+void imprime_codigo(char **codigo, int tamanho);
+void salva_codigo(char **codigo, int tamanho);
+void decodificar(int tam_str, char **codigo);
+int busca_id_letra(char *str, char **codigo, int tam);
+void cria_decode(int id, Codificacao *no, FILE *pointer);
 
 // Função main:
 int main(){
+    int total_caracter, altura;
+    char** codigo;
 
-    le_palavra();
-
+    // Leitura do arquivo e criação da lista
+    printf("    -- Codificação de Huffman --\n");
+    printf("Lista:");
+    total_caracter = le_palavra();
+    printf("--------------------------------\n");
+    
+    // Ordena a lista por frequência
+    printf("Lista ordenada:");
     ordena_freq();
+    printf("--------------------------------\n");
 
+    // Cria a árvore
+    printf("Arvore:");
     monta_arvore();
+    printf("--------------------------------\n");
+    
+    // Codifica os caracteres e salva no arquivo
+    printf("Codificação:");
+    altura = calc_altura(&pontas.head->node) + 1;
+    codigo = aloca_codigo(altura, total_caracter);
+    printf("\n");
+    escreve_codigo(codigo, &pontas.head->node, "", altura);
+    imprime_codigo(codigo, total_caracter);
+    salva_codigo(codigo, total_caracter);
+    printf("--------------------------------\n");
+
+    // Decodifca o código e cria a lista decodificada
+    printf("Descodifcação\n");
+    decodificar(total_caracter, codigo);
+    printf("--------------------------------\n");
 
     return 0;
 }
 
 // Funções:
-void le_palavra(){
+int le_palavra(){
     FILE *fp;
     int total_caracteres;
 
@@ -68,10 +104,13 @@ void le_palavra(){
     monta_lista(fp, total_caracteres);
 
     fclose(fp);
+
+    return total_caracteres;
 }
 void monta_lista(FILE *p, int total_caracteres){
     char c;
 	Lista *novo_no;
+    int contador = 0;
 
     pontas.head = NULL;
     pontas.tail = NULL;
@@ -82,7 +121,9 @@ void monta_lista(FILE *p, int total_caracteres){
         if(tem_letra(c)){
 			aumenta_freq(c);
         }else{
-			novo_no = (Lista *)malloc(sizeof(Lista));
+            novo_no = (Lista *)malloc(sizeof(Lista));
+            novo_no->node.id = contador;
+            contador++;
 			novo_no->node.caractere = c;
 			novo_no->node.freq = 1;
 			novo_no->node.direita = NULL;
@@ -130,9 +171,9 @@ void aumenta_freq(char c){
 }
 void print_lista(){
     Lista *aux;
-
+    printf("\n");
 	for(aux = pontas.head; aux!=NULL; aux = aux->next){
-		printf("Letra: %c\nFrequência: %d\n", aux->node.caractere, aux->node.freq);
+		printf("\tLetra: %c\n\tFrequência: %d\n", aux->node.caractere, aux->node.freq);
 	}
 }
 void ordena_freq(){
@@ -152,7 +193,6 @@ void ordena_freq(){
 		}
 	}
 
-    printf("\nOrdenado:\n");
     print_lista();
 }
 void troca_posi(Codificacao *maior, Codificacao *menor){
@@ -191,7 +231,7 @@ void monta_arvore(){
         }
         ordena_freq();
     }
-
+    printf("\n");
     imprime_arvore(&pontas.head->node, 0);
 }
 Codificacao *guilhotina(){
@@ -216,9 +256,118 @@ Codificacao *guilhotina(){
 }
 void imprime_arvore(Codificacao *raiz, int altura){
     if(raiz->direita == NULL && raiz->esquerda == NULL){
-        printf("\n\tLetra: %c\n\tFrequencia: %d\n\tTamanho: %d\n", raiz->caractere, raiz->freq, altura);
+        printf("\tLetra: %3c -> Frequencia: %3d -> Altura: %3d\n", raiz->caractere, raiz->freq, altura);
     }else{
         imprime_arvore(raiz->esquerda, altura + 1);
         imprime_arvore(raiz->direita, altura + 1);
+    }
+}
+int calc_altura(Codificacao *no){
+    int esq, dir;
+
+    if(no == NULL)
+        return -1;
+    else{
+        esq = calc_altura(no->esquerda) + 1;
+        dir = calc_altura(no->direita) + 1;
+
+        if(esq > dir){
+            return esq;
+        }else{
+            return dir;
+        }
+    }
+}
+char** aloca_codigo(int colunas, int tamanho){
+    char** codigo;
+
+    codigo = malloc(sizeof(char*) * tamanho);
+
+    for(int i = 0; i < tamanho; i++)
+        codigo[i] = calloc(colunas, sizeof(char));
+
+    return codigo;
+}
+void escreve_codigo(char **codigo, Codificacao *raiz, char *caminho, int colunas){
+    char esquerda[colunas], direita[colunas];
+
+    if(raiz->esquerda == NULL && raiz->direita == NULL){
+        strcpy(codigo[raiz->id], caminho);
+        printf("\tRaiz %3d: %3c -> %s\n", raiz->id, raiz->caractere, caminho);
+    }else{
+        strcpy(esquerda, caminho);
+        strcpy(direita, caminho);
+
+        strcat(esquerda, "0");
+        strcat(direita, "1");
+
+        escreve_codigo(codigo, raiz->esquerda, esquerda, colunas);
+        escreve_codigo(codigo, raiz->direita, direita, colunas);
+    }
+}
+void imprime_codigo(char **codigo, int tamanho){
+    printf("\n");
+    for(int i = 0; i < tamanho; i++){
+        if(strlen(codigo[i])>0)
+            printf("\t%3d: %s\n", i, codigo[i]);
+    }
+}
+void salva_codigo(char **codigo, int tamanho){
+    FILE *fp;
+
+    fp = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "w");
+    if(fp == NULL){
+        printf("Error!\n");
+        exit(1);
+    }
+
+    for(int i = 0; i < tamanho; i++){
+        if(strlen(codigo[i])>0){   
+            fprintf(fp, "%s\n", codigo[i]);
+        }
+    }
+
+    fclose(fp);
+}
+void decodificar(int tam_str, char **codigo){
+    FILE *codificado, *decode;
+    char string[tam_str];
+    int id;
+
+    codificado = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "r");
+    if(codificado == NULL){
+        printf("Erro ao abrir arquivo codificação!\n");
+        exit(1);
+    }
+
+    decode = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/decodificado.txt", "w");
+    if(decode == NULL){
+        printf("Erro ao criar decode!\n");
+        exit(1);
+    }
+
+    for(int i = 0; i < tam_str; i++){
+        fscanf(codificado, "%s\n", string);
+        id = busca_id_letra(string, codigo, tam_str);
+        cria_decode(id, &pontas.head->node, decode);
+    }
+
+    fclose(codificado);
+}
+int busca_id_letra(char *str, char **codigo, int tam){
+    for(int i = 0; i < tam; i++){
+        if(strcmp(str, codigo[i])==0){
+            return i;
+        }
+    }
+    return -1;
+}
+void cria_decode(int id, Codificacao *no, FILE *pointer){
+    if(no->esquerda == NULL && no->direita == NULL){
+        if(no->id == id)
+            fprintf(pointer, "%c", no->caractere);
+    }else{
+        cria_decode(id, no->esquerda, pointer);
+        cria_decode(id, no->direita, pointer);
     }
 }
