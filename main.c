@@ -189,6 +189,12 @@ void ordena_freq(){
                 troca_posi(&robin->node, &robin->next->node);
                 houve_troca = 1;
             }
+            if(robin->node.freq == robin->next->node.freq){
+                if(robin->node.caractere > robin->next->node.caractere){
+                    troca_posi(&robin->node, &robin->next->node);
+                    houve_troca = 1;
+                }
+            }
 		}
 		if(houve_troca == 0){
 			break;
