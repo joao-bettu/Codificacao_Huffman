@@ -45,10 +45,12 @@ int calc_altura(Codificacao *no);
 char** aloca_codigo(int colunas, int tamanho);
 void escreve_codigo(char **codigo, Codificacao *raiz, char *caminho, int colunas);
 void imprime_codigo(char **codigo, int tamanho);
-void salva_codigo(char **codigo, int tamanho);
-void decodificar(int tam_str, char **codigo);
+void salva_codigo(char **codigo);
+void escreve_no_arquivo(Codificacao *raiz, char letra, char **codigo, FILE *arquivo);
+void decodificar(int tam_str, char **codigo, int tam_code);
 int busca_id_letra(char *str, char **codigo, int tam);
 void cria_decode(int id, Codificacao *no, FILE *pointer);
+void apaga_vetor(char *vetor, int tamanho);
 
 // Função main:
 int main(){
@@ -78,12 +80,12 @@ int main(){
     printf("\n");
     escreve_codigo(codigo, &pontas.head->node, "", altura);
     imprime_codigo(codigo, total_caracter);
-    salva_codigo(codigo, total_caracter);
+    salva_codigo(codigo);
     printf("--------------------------------\n");
 
     // Decodifca o código e cria a lista decodificada
     printf("Descodifcação\n");
-    decodificar(total_caracter, codigo);
+    decodificar(total_caracter, codigo, altura);
     printf("--------------------------------\n");
 
     return 0;
@@ -312,26 +314,46 @@ void imprime_codigo(char **codigo, int tamanho){
             printf("\t%3d: %s\n", i, codigo[i]);
     }
 }
-void salva_codigo(char **codigo, int tamanho){
-    FILE *fp;
+void salva_codigo(char **codigo){
+    FILE *codif, *amostra;
+    int tamanho;
+    char letra;
 
-    fp = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "w");
-    if(fp == NULL){
-        printf("Error!\n");
+    codif = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "w");
+    if(codif == NULL){
+        printf("Erro ao criar codificado!\n");
         exit(1);
     }
 
-    for(int i = 0; i < tamanho; i++){
-        if(strlen(codigo[i])>0){   
-            fprintf(fp, "%s\n", codigo[i]);
-        }
+    amostra = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/amostra.txt", "r");
+    if(amostra == NULL){
+        printf("Erro ao abrir amostra!\n");
+        exit(1);
     }
 
-    fclose(fp);
+    fscanf(amostra, "%d\n", &tamanho);
+
+    for(int i = 0; i < tamanho + 1; i++){
+        letra = fgetc(amostra);
+        escreve_no_arquivo(&pontas.head->node, letra, codigo, codif);
+    }
+
+    fclose(codif);
+    fclose(amostra);
 }
-void decodificar(int tam_str, char **codigo){
-    FILE *codificado, *decode;
-    char string[tam_str];
+void escreve_no_arquivo(Codificacao *raiz, char letra, char **codigo, FILE *arquivo){
+    if(raiz->esquerda == NULL && raiz->direita == NULL){
+        if(raiz->caractere == letra){
+            fprintf(arquivo, "%s", codigo[raiz->id]);
+        }
+    }else{
+        escreve_no_arquivo(raiz->esquerda, letra, codigo, arquivo);
+        escreve_no_arquivo(raiz->direita, letra, codigo, arquivo);
+    }
+}
+void decodificar(int tam_str, char **codigo, int tam_code){
+    FILE *codificado, *decodifica;
+    //char code[tam_str];
     int id;
 
     codificado = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "r");
@@ -340,16 +362,23 @@ void decodificar(int tam_str, char **codigo){
         exit(1);
     }
 
-    decode = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/decodificado.txt", "w");
-    if(decode == NULL){
+    decodifica = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/decodificado.txt", "w");
+    if(decodifica == NULL){
         printf("Erro ao criar decode!\n");
         exit(1);
     }
 
-    for(int i = 0; i < tam_str; i++){
-        fscanf(codificado, "%s\n", string);
-        id = busca_id_letra(string, codigo, tam_str);
-        cria_decode(id, &pontas.head->node, decode);
+    while(!feof(codificado)){
+        char *code;
+        code = calloc(tam_code, sizeof(char));
+        for(int i = 0; i < tam_code + 1; i++){
+            code[i] = fgetc(codificado);
+            id = busca_id_letra(code, codigo, tam_str);
+            if(id>=0){
+                cria_decode(id, &pontas.head->node, decodifica);
+                break;
+            }
+        }
     }
 
     fclose(codificado);
@@ -369,5 +398,10 @@ void cria_decode(int id, Codificacao *no, FILE *pointer){
     }else{
         cria_decode(id, no->esquerda, pointer);
         cria_decode(id, no->direita, pointer);
+    }
+}
+void apaga_vetor(char *vetor, int tamanho){
+    for(int i = 0; i < tamanho + 1; i++){
+        vetor[i] = '\0';
     }
 }
