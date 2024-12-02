@@ -45,9 +45,9 @@ int calc_altura(Codificacao *no);
 char** aloca_codigo(int colunas, int tamanho);
 void escreve_codigo(char **codigo, Codificacao *raiz, char *caminho, int colunas);
 void imprime_codigo(char **codigo, int tamanho);
-void salva_codigo(char **codigo, int tamanho);
+void salva_codigo(char **codigo);
 void decodificar(int tam_str, char **codigo);
-int busca_id_letra(char *str, char **codigo, int tam);
+int busca_indice_code(char *str, char **codigo, int tam);
 void cria_decode(int id, Codificacao *no, FILE *pointer);
 
 // Função main:
@@ -78,7 +78,7 @@ int main(){
     printf("\n");
     escreve_codigo(codigo, &pontas.head->node, "", altura);
     imprime_codigo(codigo, total_caracter);
-    salva_codigo(codigo, total_caracter);
+    salva_codigo(codigo);
     printf("--------------------------------\n");
 
     // Decodifca o código e cria a lista decodificada
@@ -312,22 +312,27 @@ void imprime_codigo(char **codigo, int tamanho){
             printf("\t%3d: %s\n", i, codigo[i]);
     }
 }
-void salva_codigo(char **codigo, int tamanho){
-    FILE *fp;
+void salva_codigo(char **codigo){
+    FILE *codifc, *amostra;
+    char letra;
+    int id, tamanho;
 
-    fp = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "w");
-    if(fp == NULL){
-        printf("Error!\n");
+    codifc = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "w");
+    if(codifc == NULL){
+        printf("Erro ao criar codificado!\n");
         exit(1);
     }
 
-    for(int i = 0; i < tamanho; i++){
-        if(strlen(codigo[i])>0){   
-            fprintf(fp, "%s\n", codigo[i]);
-        }
+    amostra = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/amostra.txt", "r");
+    if(amostra == NULL){
+        printf("Erro ao abrir amostra!\n");
+        exit(1);
     }
 
-    fclose(fp);
+    // percorrer a palavra e para cada letra adicionar o código no arquivo codificado
+
+    fclose(codifc);
+    fclose(amostra);
 }
 void decodificar(int tam_str, char **codigo){
     FILE *codificado, *decode;
@@ -348,13 +353,13 @@ void decodificar(int tam_str, char **codigo){
 
     for(int i = 0; i < tam_str; i++){
         fscanf(codificado, "%s\n", string);
-        id = busca_id_letra(string, codigo, tam_str);
+        id = busca_indice_code(string, codigo, tam_str);
         cria_decode(id, &pontas.head->node, decode);
     }
 
     fclose(codificado);
 }
-int busca_id_letra(char *str, char **codigo, int tam){
+int busca_indice_code(char *str, char **codigo, int tam){
     for(int i = 0; i < tam; i++){
         if(strcmp(str, codigo[i])==0){
             return i;
