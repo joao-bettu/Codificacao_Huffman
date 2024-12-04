@@ -50,7 +50,6 @@ void escreve_no_arquivo(Codificacao *raiz, char letra, char **codigo, FILE *arqu
 void decodificar(int tam_str, char **codigo, int tam_code);
 int busca_id_letra(char *str, char **codigo, int tam);
 void cria_decode(int id, Codificacao *no, FILE *pointer);
-void apaga_vetor(char *vetor, int tamanho);
 
 // Função main:
 int main(){
@@ -359,7 +358,6 @@ void escreve_no_arquivo(Codificacao *raiz, char letra, char **codigo, FILE *arqu
 }
 void decodificar(int tam_str, char **codigo, int tam_code){
     FILE *codificado, *decodifica;
-    //char code[tam_str];
     int id;
 
     codificado = fopen("/home/joaobettu/Documentos/UFFS/2024-2/POD/TF/codificado.txt", "r");
@@ -404,10 +402,5 @@ void cria_decode(int id, Codificacao *no, FILE *pointer){
     }else{
         cria_decode(id, no->esquerda, pointer);
         cria_decode(id, no->direita, pointer);
-    }
-}
-void apaga_vetor(char *vetor, int tamanho){
-    for(int i = 0; i < tamanho + 1; i++){
-        vetor[i] = '\0';
     }
 }
