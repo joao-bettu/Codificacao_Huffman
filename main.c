@@ -95,7 +95,7 @@ int le_palavra(){
     FILE *fp;
     int total_caracteres;
 
-    fp = fopen("/path/to//amostra.txt", "r");
+    fp = fopen("/path/to/amostra.txt", "r");
     if(fp==NULL){
         printf("Não foi possível abrir o arquivo!\n");
         exit(1);
@@ -324,13 +324,13 @@ void salva_codigo(char **codigo){
     int tamanho;
     char letra;
 
-    codif = fopen("/path/to//codificado.txt", "w");
+    codif = fopen("/path/to/codificado.txt", "w");
     if(codif == NULL){
         printf("Erro ao criar codificado!\n");
         exit(1);
     }
 
-    amostra = fopen("/path/to//amostra.txt", "r");
+    amostra = fopen("/path/to/amostra.txt", "r");
     if(amostra == NULL){
         printf("Erro ao abrir amostra!\n");
         exit(1);
@@ -360,13 +360,13 @@ void decodificar(int tam_str, char **codigo, int tam_code){
     FILE *codificado, *decodifica;
     int id;
 
-    codificado = fopen("/path/to//codificado.txt", "r");
+    codificado = fopen("/path/to/codificado.txt", "r");
     if(codificado == NULL){
         printf("Erro ao abrir arquivo codificação!\n");
         exit(1);
     }
 
-    decodifica = fopen("/path/to//decodificado.txt", "w");
+    decodifica = fopen("/path/to/decodificado.txt", "w");
     if(decodifica == NULL){
         printf("Erro ao criar decode!\n");
         exit(1);
