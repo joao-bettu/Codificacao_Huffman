@@ -1,6 +1,5 @@
 /*
     João Victor Bettu
-    20230003744
     -- Codificação de Huffman --
 */
 
